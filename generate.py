@@ -503,7 +503,14 @@ def osm_embed(lat: str, lon: str, label: str) -> str:
 # --------------------------------------------------------------------------- #
 def fetch_csv(url: str) -> str:
     print(f"Pobieram dane z arkusza Google: {url}")
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    req = urllib.request.Request(
+        url,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+        },
+    )
     with urllib.request.urlopen(req, timeout=30) as resp:
         # Arkusz jest kodowany w UTF-8.
         return resp.read().decode("utf-8-sig")
