@@ -62,7 +62,7 @@ function initMapFromScript(containerId, jsonScriptId, opts) {
   points.forEach(function (p) {
     var lat = parseFloat(p.lat);
     var lon = parseFloat(p.lon);
-    if (isNaN(lat) || isNaN(lon)) return;
+    if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) return;
     var cat = p.cat || "inne";
     if (!layers[cat]) layers[cat] = L.layerGroup();
     var color =
@@ -95,6 +95,14 @@ function initMapFromScript(containerId, jsonScriptId, opts) {
     return;
   }
 
+  // Ustaw widok PRZED dodaniem markerów – Leaflet wymaga _pxBounds,
+  // by móc dodać CircleMarker (inaczej błąd przy niektórych punktach).
+  if (bounds.length === 1) {
+    map.setView(bounds[0], opts.battle ? 15 : 13);
+  } else {
+    map.fitBounds(bounds, { padding: [30, 30], maxZoom: opts.battle ? 16 : 15 });
+  }
+
   // Dodaj wszystkie warstwy do mapy.
   Object.keys(layers).forEach(function (k) {
     if (layers[k].getLayers().length) layers[k].addTo(map);
@@ -110,15 +118,20 @@ function initMapFromScript(containerId, jsonScriptId, opts) {
     };
     for (var i = 0; i < points.length - 1; i++) {
       var a = points[i], b = points[i + 1];
+      var alat = parseFloat(a.lat), alon = parseFloat(a.lon);
+      var blat = parseFloat(b.lat), blon = parseFloat(b.lon);
+      if (isNaN(alat) || isNaN(alon) || isNaN(blat) || isNaN(blon)) continue;
+      if (alat < -90 || alat > 90 || alon < -180 || alon > 180) continue;
+      if (blat < -90 || blat > 90 || blon < -180 || blon > 180) continue;
       var st = PHASE_ARROW[b.phase] || PHASE_ARROW.bitwa;
       var popts = { color: st.color, weight: 3, opacity: 0.85 };
       if (st.dash) popts.dashArray = st.dash;
       L.polyline([
-        [parseFloat(a.lat), parseFloat(a.lon)],
-        [parseFloat(b.lat), parseFloat(b.lon)],
+        [alat, alon],
+        [blat, blon],
       ], popts).addTo(map);
-      var midLat = (parseFloat(a.lat) + parseFloat(b.lat)) / 2;
-      var midLon = (parseFloat(a.lon) + parseFloat(b.lon)) / 2;
+      var midLat = (alat + blat) / 2;
+      var midLon = (alon + blon) / 2;
       var bearing = Math.atan2(
         parseFloat(b.lat) - parseFloat(a.lat),
         parseFloat(b.lon) - parseFloat(a.lon)
@@ -134,13 +147,8 @@ function initMapFromScript(containerId, jsonScriptId, opts) {
     }
   }
 
-  if (bounds.length === 1) {
-    // Pojedynczy punkt – duży zoom (jak w pierwotnej wersji).
-    map.setView(bounds[0], opts.battle ? 15 : 15);
-  } else {
-    var maxZoom = opts.battle ? 16 : 15;
-    map.fitBounds(bounds, { padding: [30, 30], maxZoom: maxZoom });
-    // Mapa pola bitwy (lub bardzo bliskie punkty) – nie oddalaj za bardzo.
+  // Widok ustawiono wyżej; tu tylko pilnujemy minimalnego przybliżenia.
+  if (bounds.length > 1) {
     var minZoom = opts.battle ? 14 : 4;
     if (map.getZoom() < minZoom) map.setZoom(minZoom);
   }

@@ -137,6 +137,20 @@ table.bio td a { font-weight: 600; }
 .soldier-list .meta { display: block; font-size: .82rem; color: #888; margin-top: 2px; }
 .soldier-list .snippet { display: block; font-size: .86rem; color: #777; margin-top: 6px; line-height: 1.45; }
 
+/* Zwarta lista żołnierzy (strona główna) – jak najwięcej nazwisk na ekran */
+.soldier-list.compact {
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0; border-top: 1px solid #eee; margin-top: 12px;
+}
+.soldier-list.compact .soldier {
+  padding: 4px 10px; border: none; border-bottom: 1px solid #f0f0f0;
+  border-left: 3px solid #34495e; background: none; border-radius: 0;
+  display: flex; align-items: baseline; gap: 6px;
+}
+.soldier-list.compact .soldier:hover { background: #eef3f8; }
+.soldier-list.compact a { font-size: .95rem; font-weight: 600; display: inline; }
+.soldier-list.compact .meta { display: inline; font-size: .78rem; color: #999; margin: 0; }
+
 /* ---------- wyszukiwarka żołnierzy ---------- */
 .search-box { display: flex; align-items: center; gap: 12px; margin: 4px 0 6px; }
 .search-box input[type="search"] {

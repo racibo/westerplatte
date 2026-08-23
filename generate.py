@@ -786,12 +786,10 @@ def build_index(template: str, records: list, url_base: str, db_stats: dict) -> 
         snippet = clean_text(rec["zycie_do_1939"]) or clean_text(rec["wrzesnia_1"])
         li = (
             f'  <li class="soldier">\n'
-            f'    <a href="/zolnierze/{slug}.html">{html.escape(raw_name)}</a>\n'
+            f'    <a href="/zolnierze/{slug}.html">{html.escape(raw_name)}</a>'
         )
         if birth:
-            li += f'    <span class="meta">ur. {html.escape(birth)}</span>\n'
-        if snippet:
-            li += f'    <span class="snippet">{html.escape(snippet[:160])}</span>\n'
+            li += f'<span class="meta"> ({html.escape(birth)})</span>'
         li += '  </li>'
         items.append(li)
 
@@ -830,7 +828,7 @@ def build_index(template: str, records: list, url_base: str, db_stats: dict) -> 
     )
     list_html = (
         search_html
-        + '<ul class="soldier-list">\n' + "\n".join(items) + '\n</ul>'
+        + '<ul class="soldier-list compact">\n' + "\n".join(items) + '\n</ul>'
         + script_html
     )
 
