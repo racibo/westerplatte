@@ -308,6 +308,20 @@ def clean_date(raw: str) -> str:
     return raw
 
 
+def strip_gps(text: str) -> str:
+    """Usuwa współrzędne GPS z tekstu przeznaczonego do wyświetlenia
+    (tak jak w pierwotnej wersji serwisu – pokazujemy nazwy miejscowości,
+    nie surowe szerokości/długości geograficzne)."""
+    if not text:
+        return ""
+    text = COORD_RE.sub(" ", text)      # pary "szerokość, długość"
+    text = NUM_RE.sub(" ", text)        # pojedyncze współrzędne
+    text = re.sub(r"\s*[:;]\s*$", "", text)
+    text = text.replace(" :", ":")
+    text = re.sub(r"\s+", " ", text).strip(" :;,")
+    return text
+
+
 def parse_iso_date(raw: str):
     """Próbuje wygenerować datę ISO (YYYY-MM-DD / YYYY-MM / YYYY) do JSON-LD."""
     raw = clean_text(raw)
@@ -611,6 +625,32 @@ def render_places_list(points: list) -> str:
     return blocks
 
 
+def render_bio_table(rec: dict, name_map: dict, name: str) -> str:
+    """Zwarta tabela biogramu (etykieta | wartość) bez współrzędnych GPS
+    – odtwarza czytelną formę z pierwotnej wersji serwisu."""
+    rows = []
+
+    def add_row(label, value):
+        v = strip_gps(clean_text(value))
+        if not v:
+            return
+        text = html.escape(v)
+        if name_map:
+            text = link_soldier_names(text, name_map, exclude=name)
+        rows.append(f'<tr><th>{html.escape(label)}</th><td>{text}</td></tr>')
+
+    add_row("Nazwisko i imię", name)
+    birth = clean_date(rec["data_urodzenia"])
+    if birth:
+        rows.append(f'<tr><th>Data urodzenia</th><td>{html.escape(birth)}</td></tr>')
+    for key, (label, cls) in SECTION_LABELS.items():
+        add_row(label, rec.get(key, ""))
+
+    if not rows:
+        return ""
+    return '<table class="bio">' + "".join(rows) + "</table>"
+
+
 def render_soldier_map(points: list) -> str:
     """Interaktywna mapa losów żołnierza (Leaflet) z kolorami faz życia."""
     if not points:
@@ -618,8 +658,8 @@ def render_soldier_map(points: list) -> str:
     data = [
         {
             "lat": p["lat"], "lon": p["lon"], "label": p["label"],
-            "phase_label": p["phase_label"], "color": p["color"],
-            "context": p["context"][:400],
+            "phase": p["phase"], "phase_label": p["phase_label"],
+            "color": p["color"], "context": p["context"][:400],
         }
         for p in points
     ]
@@ -641,7 +681,7 @@ def render_soldier_map(points: list) -> str:
         '  <div id="soldier-map" class="leaflet-map"></div>\n'
         f'  <div class="legend">{legend}</div>\n'
         f'  <script type="application/json" id="soldier-points">{json_str}</script>\n'
-        '  <script>initMapFromScript("soldier-map","soldier-points",{radius:8, minZoom:13});</script>\n'
+        '  <script>initMapFromScript("soldier-map","soldier-points",{radius:8, minZoom:13, arrows:true});</script>\n'
         '</section>'
     )
 
@@ -663,15 +703,11 @@ def build_soldier_page(template: str, rec: dict, url_base: str,
     iso_birth = parse_iso_date(rec["data_urodzenia"])
     points = extract_places(rec, name)
 
-    # Sekcje chronologiczne (z hiperłączami do innych żołnierzy).
-    sections_html = ""
-    for key, (label, cls) in SECTION_LABELS.items():
-        sections_html += render_section(label, clean_text(rec[key]), cls, name_map, name)
+    # Zwarta tabela biogramu (etykiety | wartości, bez współrzędnych GPS)
+    # – odtwarza czytelną, zwartą formę z pierwotnej wersji serwisu.
+    bio_table = render_bio_table(rec, name_map, name)
 
-    # Lista miejsc pogrupowana według faz życia.
-    places_html = render_places_list(points)
-
-    # Interaktywna mapa losów żołnierza (Leaflet).
+    # Interaktywna mapa losów żołnierza (Leaflet) z strzałkami przemieszczania.
     map_block = render_soldier_map(points)
 
     if note:
@@ -679,20 +715,17 @@ def build_soldier_page(template: str, rec: dict, url_base: str,
     else:
         note_html = ""
 
-    # Dane podstawowe (+ przypisana placówka bojowa, jak w pierwotnej wersji).
+    # Przypisana placówka bojowa (jak w pierwotnej wersji).
     battle_place = next((p for p in points if p["phase"] == "bitwa"), None)
-    basics = ""
-    if birth_raw or battle_place:
-        basics = '<section class="timeline-block">\n  <h2>Dane podstawowe</h2>\n'
-        if birth_raw:
-            basics += f'  <p><strong>Data urodzenia:</strong> {html.escape(birth_raw)}</p>\n'
-        if battle_place:
-            basics += (
-                '  <p class="place-ref">Przypisana placówka bojowa: '
-                f'<a class="soldier-link" href="/kategoria/{slugify(battle_place["label"])}.html">'
-                f'{html.escape(battle_place["label"])}</a></p>\n'
-            )
-        basics += '</section>'
+    place_line = ""
+    if battle_place:
+        place_line = (
+            '<p class="place-ref">Przypisana placówka bojowa: '
+            f'<a class="soldier-link" href="/kategoria/{slugify(battle_place["label"])}.html">'
+            f'{html.escape(battle_place["label"])}</a></p>'
+        )
+
+    intro = '<h2 class="bio-name">' + html.escape(name) + "</h2>" + place_line + bio_table
 
     canonical = f"{url_base.rstrip('/')}/zolnierze/{slugify(rec['nazwisko_imie'])}.html"
     title = f"{name} – Obrońca Westerplatte"
@@ -726,10 +759,10 @@ def build_soldier_page(template: str, rec: dict, url_base: str,
         "{{CANONICAL}}": html.escape(canonical),
         "{{NAME}}": html.escape(name),
         "{{NOTE}}": note_html,
-        "{{BASICS}}": '<div class="bio-cols"><div class="bio-text">' + basics,
+        "{{BASICS}}": '<div class="bio-cols"><div class="bio-text">' + intro,
         "{{INTRO}}": "",
-        "{{SECTIONS}}": sections_html,
-        "{{PLACES}}": places_html,
+        "{{SECTIONS}}": "",
+        "{{PLACES}}": "",
         "{{MAP_BLOCK}}": '</div><div class="bio-viz">' + map_block + '</div></div>',
         "{{PAGE_CLASS}}": "soldier-page",
         "{{JSON_LD}}": json.dumps(json_ld, ensure_ascii=False),

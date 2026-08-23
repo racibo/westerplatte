@@ -100,6 +100,40 @@ function initMapFromScript(containerId, jsonScriptId, opts) {
     if (layers[k].getLayers().length) layers[k].addTo(map);
   });
 
+  // Strzałki pokazujące przemieszczanie się żołnierza (jak w pierwotnej wersji).
+  if (opts.arrows && points.length > 1) {
+    var PHASE_ARROW = {
+      dzieciństwo: { color: "#2a6fb0", dash: null },
+      bitwa:       { color: "#b02a2a", dash: null },
+      wojna:       { color: "#d98a1f", dash: "6,6" },
+      powojnie:    { color: "#2e8b57", dash: "2,6" },
+    };
+    for (var i = 0; i < points.length - 1; i++) {
+      var a = points[i], b = points[i + 1];
+      var st = PHASE_ARROW[b.phase] || PHASE_ARROW.bitwa;
+      var popts = { color: st.color, weight: 3, opacity: 0.85 };
+      if (st.dash) popts.dashArray = st.dash;
+      L.polyline([
+        [parseFloat(a.lat), parseFloat(a.lon)],
+        [parseFloat(b.lat), parseFloat(b.lon)],
+      ], popts).addTo(map);
+      var midLat = (parseFloat(a.lat) + parseFloat(b.lat)) / 2;
+      var midLon = (parseFloat(a.lon) + parseFloat(b.lon)) / 2;
+      var bearing = Math.atan2(
+        parseFloat(b.lat) - parseFloat(a.lat),
+        parseFloat(b.lon) - parseFloat(a.lon)
+      ) * 180 / Math.PI;
+      var rot = 90 - bearing;
+      var icon = L.divIcon({
+        className: "arrow-head",
+        html: '<div style="transform:rotate(' + rot +
+              'deg);border-bottom-color:' + st.color + '"></div>',
+        iconSize: [14, 14], iconAnchor: [7, 7],
+      });
+      L.marker([midLat, midLon], { icon: icon, interactive: false }).addTo(map);
+    }
+  }
+
   if (bounds.length === 1) {
     // Pojedynczy punkt – duży zoom (jak w pierwotnej wersji).
     map.setView(bounds[0], opts.battle ? 15 : 15);
