@@ -672,12 +672,6 @@ def render_soldier_map(points: list) -> str:
     return (
         '<section class="timeline-block map-block">\n'
         '  <h2>Mapa losów żołnierza</h2>\n'
-        '  <p class="map-hint">Kolory oznaczają kolejne etapy życia: '
-        '<span class="swatch" style="background:#2a6fb0"></span>dzieciństwo, '
-        '<span class="swatch" style="background:#b02a2a"></span>wrzesień 1939, '
-        '<span class="swatch" style="background:#d98a1f"></span>lata 1939–1945, '
-        '<span class="swatch" style="background:#2e8b57"></span>po wojnie. '
-        'Kliknij punkt, by poznać szczegóły.</p>\n'
         '  <div id="soldier-map" class="leaflet-map"></div>\n'
         f'  <div class="legend">{legend}</div>\n'
         f'  <script type="application/json" id="soldier-points">{json_str}</script>\n'
@@ -1017,7 +1011,7 @@ def build_category_pages(records: list, template: str, url_base: str,
             f'<div class="cat-layout">\n'
             f'  <div class="cat-list-col">\n'
             f'    <section class="timeline-block">\n'
-            f'      <h2>Obrońcy przypisani do: {html.escape(label)}</h2>\n'
+            f'      <h2>Obrońcy powiązani z placówką: {html.escape(label)}</h2>\n'
             f'      <p>Ta kategoria grupuje obrońców Westerplatte, których biogram '
             f'wskazuje przydział do tego miejsca podczas obrony września 1939 roku. '
             f'Kliknij nazwisko, by przejść do biogramu.</p>\n'
@@ -1026,7 +1020,7 @@ def build_category_pages(records: list, template: str, url_base: str,
             f'      {members_html}\n'
             f'    </section>\n'
             f'    <section class="timeline-block">\n'
-            f'      <h2>Powiązane kategorie (inne placówki)</h2>\n'
+            f'      <h2>Powiązane kategorie</h2>\n'
             f'      <p>Przejdź do innych placówek bojowych, by zobaczyć przypisanych '
             f'im obrońców:</p>\n'
             f'      {related_html}\n'
@@ -1164,24 +1158,31 @@ def render_categorized_map(pid: str, title: str, points: list, cats: list,
     opts = opts or {}
     battle_opt = ", battle:true" if opts.get("battle") else ""
     legend_id = f"legend-{pid}"
+    panel_id = f"panel-{pid}" if opts.get("two_col") else ""
+    opts_js = f'{{radius:{opts.get("radius", 6)}{battle_opt}, legend:"{legend_id}"'
+    if panel_id:
+        opts_js += f', panel:"{panel_id}"'
+    opts_js += "}"
     map_inner = (
         f'  <div id="map-{pid}" class="leaflet-map"></div>\n'
         f'  <div class="legend legend-toggle" id="{legend_id}"></div>\n'
         f'  <script type="application/json" id="pts-{pid}">{js}</script>\n'
-        f'  <script>initMapFromScript("map-{pid}","pts-{pid}",'
-        f'{{radius:{opts.get("radius", 6)}{battle_opt}, legend:"{legend_id}"}});'
+        f'  <script>initMapFromScript("map-{pid}","pts-{pid}",{opts_js});'
         f'</script>\n'
     )
     if opts.get("two_col"):
+        desc_p = f'<p>{html.escape(desc)}</p>' if desc else ""
         return (
             f'<section class="timeline-block map-block map-2col" id="sec-{pid}">\n'
-            f'  <div class="map-info">\n'
-            f'    <h2>{html.escape(title)}</h2>\n'
-            f'    {("<p>" + html.escape(desc) + "</p>") if desc else ""}\n'
-            f'  </div>\n'
             f'  <div class="map-viz">\n'
-            f'{map_inner}'
+            f'    <h2>{html.escape(title)}</h2>\n'
+            f'    {desc_p}\n'
+            f'    {map_inner}'
             f'  </div>\n'
+            f'  <aside class="map-panel" id="{panel_id}">\n'
+            f'    <p class="map-panel-empty">Kliknij punkt na mapie, aby zobaczyć '
+            f'szczegóły i powiązane biogramy.</p>\n'
+            f'  </aside>\n'
             f'</section>'
         )
     return (
@@ -1409,16 +1410,29 @@ def main():
     name_map = build_name_map(records)
     print(f"Baza danych: {db_stats['pct']}% wypełnienia, {db_stats['names']} nazwisk.")
 
+    # Bezpieczne uzupełnienie placeholderów topbary (gwarantuje brak
+    # przecieków {{FILL_PCT}} / {{FILL_TIP}} na dowolnej podstronie).
+    def _finalize(page: str) -> str:
+        return (
+            page.replace("{{FILL_PCT}}", str(db_stats["pct"]))
+                .replace("{{FILL_TIP}}", format_fill_tip(db_stats))
+                .replace("{{YEAR}}", str(datetime.now().year))
+                .replace(
+                    "{{GENERATED}}",
+                    datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
+                )
+        )
+
     # Strona główna (używa tego samego szablonu, ale z listą zamiast sekcji).
     index_html = build_index(template, records, args.url_base, db_stats)
     with open(os.path.join(OUTPUT_DIR, "index.html"), "w", encoding="utf-8") as f:
-        f.write(index_html)
+        f.write(_finalize(index_html))
     print("Wygenerowano index.html")
 
     # Strona „O projekcie” (cel serwisu).
     about_html = build_about_page(template, records, args.url_base, db_stats)
     with open(os.path.join(OUTPUT_DIR, "o-projekcie.html"), "w", encoding="utf-8") as f:
-        f.write(about_html)
+        f.write(_finalize(about_html))
     print("Wygenerowano o-projekcie.html")
 
     # Podstrony żołnierzy.
@@ -1427,13 +1441,13 @@ def main():
         page = build_soldier_page(template, rec, args.url_base, name_map)
         out_path = os.path.join(SOLDIERS_DIR, f"{slug}.html")
         with open(out_path, "w", encoding="utf-8") as f:
-            f.write(page)
+            f.write(_finalize(page))
     print(f"Wygenerowano {len(records)} podstron w folderze zolnierze/")
 
     # Zbiorcze mapy losów.
     maps_html = build_maps_page(records, args.url_base, db_stats)
     with open(os.path.join(OUTPUT_DIR, "mapy.html"), "w", encoding="utf-8") as f:
-        f.write(maps_html)
+        f.write(_finalize(maps_html))
     print("Wygenerowano mapy.html (zbiorcze mapy losów)")
 
     # SEO: sitemap + robots.
@@ -1453,9 +1467,9 @@ def main():
     cat_pages = build_category_pages(records, template, args.url_base, db_stats)
     for slug, (title, html_page) in cat_pages.items():
         with open(os.path.join(CAT_DIR, f"{slug}.html"), "w", encoding="utf-8") as f:
-            f.write(html_page)
+            f.write(_finalize(html_page))
     with open(os.path.join(OUTPUT_DIR, "kategorie.html"), "w", encoding="utf-8") as f:
-        f.write(build_categories_index(records, template, args.url_base, db_stats))
+        f.write(_finalize(build_categories_index(records, template, args.url_base, db_stats)))
     print(f"Wygenerowano {len(cat_pages)} stron kategorii i indeks kategorii")
     print("Gotowe.")
 

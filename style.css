@@ -27,6 +27,8 @@ a:hover { color: #d1654f; }
   flex-wrap: wrap;
 }
 .topbar .brand h1 { margin: 0; font-size: 1.4rem; letter-spacing: .3px; }
+.brand-home { text-decoration: none; color: inherit; display: inline-block; }
+.brand-home:hover h1 { color: #d1654f; }
 .topbar .brand p { margin: 5px 0 0; font-size: .9rem; color: #bdc3c7; }
 .topbar .actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
@@ -181,14 +183,13 @@ table.bio td a { font-weight: 600; }
 .cat-map-sticky { position: sticky; top: 16px; }
 .cat-map-title { font-size: 1.05rem; margin: 0 0 8px; }
 
-.cat-soldiers { list-style: none; padding: 0; margin: 12px 0 0; }
-.cat-item { padding: 10px 12px; border: 1px solid #eee; border-left: 4px solid #34495e;
-  background: #fafafa; border-radius: 4px; margin-bottom: 8px; }
-.cat-name { display: block; font-size: 1.08rem; font-weight: 700; color: #2c3e50;
+.cat-soldiers { list-style: none; padding: 0; margin: 8px 0 0; }
+.cat-item { padding: 5px 10px; border: none; border-bottom: 1px solid #f0f0f0;
+  border-left: 3px solid #34495e; background: none; border-radius: 0; margin-bottom: 0; }
+.cat-name { display: inline; font-size: .98rem; font-weight: 600; color: #2c3e50;
   text-decoration: none; }
 .cat-name:hover { color: #d1654f; }
-.cat-assign { display: block; font-size: .82rem; color: #777; margin-top: 3px;
-  line-height: 1.4; }
+.cat-assign { display: inline; font-size: .8rem; color: #777; margin-left: 6px; line-height: 1.3; }
 
 @media (max-width: 900px) {
   .cat-layout { flex-direction: column; }
@@ -199,22 +200,31 @@ table.bio td a { font-weight: 600; }
 /* ---------- układ 2-kolumnowy: biogram (info) + mapa (wizualizacja) ---------- */
 .bio-cols { display: flex; gap: 28px; align-items: flex-start; margin-top: 8px; }
 .bio-text { flex: 1 1 auto; min-width: 0; max-width: 720px; }
-.bio-viz { flex: 0 0 460px; max-width: 460px; position: sticky; top: 16px; }
-.bio-viz .leaflet-map { height: 560px; }
+.bio-viz { flex: 0 0 420px; max-width: 420px; position: sticky; top: 16px; }
+.bio-viz .leaflet-map { height: 440px; }
 @media (max-width: 980px) {
   .bio-cols { flex-direction: column; }
   .bio-viz { position: static; flex: 1 1 auto; max-width: 100%; width: 100%; }
-  .bio-viz .leaflet-map { height: 460px; }
+  .bio-viz .leaflet-map { height: 340px; }
 }
 
-/* Mapy zbiorcze w układzie 2-kolumnowym (info + wizualizacja) */
+/* Mapy zbiorcze w układzie 2-kolumnowym: mapa (szerzej) + panel info */
 .map-2col { display: flex; gap: 24px; align-items: flex-start; }
-.map-2col .map-info { flex: 0 0 280px; max-width: 280px; }
-.map-2col .map-info h2 { margin-top: 0; }
 .map-2col .map-viz { flex: 1 1 auto; min-width: 0; }
+.map-2col .map-panel {
+  flex: 0 0 340px; max-width: 340px; align-self: flex-start;
+  position: sticky; top: 16px;
+  border: 1px solid #e0ddd5; background: #fafafa; border-radius: 6px;
+  padding: 12px 14px; font-size: .92rem; line-height: 1.5; min-height: 110px;
+}
+.map-panel-empty { color: #888; font-size: .9rem; }
+.map-panel-head { font-size: 1rem; color: #2c3e50; line-height: 1.45; }
+.map-panel-phase { color: #b02a2a; font-style: normal; font-weight: 600; font-size: .88rem; }
+.map-panel-ctx { margin: 8px 0; color: #444; }
+.map-panel-link a { font-weight: 600; }
 @media (max-width: 900px) {
   .map-2col { flex-direction: column; }
-  .map-2col .map-info { flex: 1 1 auto; max-width: 100%; }
+  .map-2col .map-panel { flex: 1 1 auto; max-width: 100%; position: static; }
 }
 
 /* ---------- miejsca / współrzędne ---------- */

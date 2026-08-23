@@ -85,6 +85,29 @@ function initMapFromScript(containerId, jsonScriptId, opts) {
       html += '<br><a href="' + escapeHtml(p.url) + '">' + escapeHtml(urlLabel) + "</a>";
     }
     marker.bindPopup(html);
+    marker.on("click", function () {
+      if (opts.panel) {
+        var panel = document.getElementById(opts.panel);
+        if (panel) {
+          panel.innerHTML =
+            '<div class="map-panel-head">' +
+            (p.name && p.name !== p.label
+              ? "<strong>" + escapeHtml(p.name) + "</strong><br>"
+              : "") +
+            (p.label ? escapeHtml(p.label) : "") +
+            (p.phase_label
+              ? '<br><em class="map-panel-phase">' + escapeHtml(p.phase_label) + "</em>"
+              : "") +
+            "</div>" +
+            (p.context ? '<p class="map-panel-ctx">' + escapeHtml(p.context) + "</p>" : "") +
+            (p.url
+              ? '<p class="map-panel-link"><a href="' +
+                escapeHtml(p.url) + '">' + escapeHtml(p.url_label || "Zobacz biogram →") +
+                "</a></p>"
+              : "");
+        }
+      }
+    });
     marker.addTo(layers[cat]);
     bounds.push([lat, lon]);
   });
