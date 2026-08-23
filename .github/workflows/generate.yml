@@ -1,0 +1,32 @@
+name: Generuj i wdróż na Netlify
+
+on:
+  schedule:
+    # Co 6 godzin (czas UTC). Zmień według potrzeb.
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}        # możliwość ręcznego uruchomienia
+  push:
+    branches: [main]           # przy pierwszym wdrożeniu
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Konfiguracja Pythona
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generowanie statycznych plików
+        run: python generate.py --url-base "https://westerplatte.racibo.pl"
+
+      - name: Wdrożenie na Netlify
+        # Wymagane sekrety w ustawieniach repozytorium (Settings → Secrets):
+        #   NETLIFY_AUTH_TOKEN – Personal access token (Netlify → User settings → Applications)
+        #   NETLIFY_SITE_ID    – ID witryny (Netlify → Site settings → General → Site ID)
+        run: npx netlify-cli deploy --prod --dir public --site "$NETLIFY_SITE_ID" --auth "$NETLIFY_AUTH_TOKEN"

@@ -1,0 +1,7 @@
+[build]
+  # Generator statyczny (Static Site Generation) – buduje witrynę z arkusza Google.
+  command = "python generate.py --url-base https://westerplatte.racibo.pl"
+  publish = "public"
+
+[build.environment]
+  PYTHON_VERSION = "3.11"

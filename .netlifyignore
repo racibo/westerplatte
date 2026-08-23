@@ -1,0 +1,10 @@
+# Pliki źródłowe – nie publikujemy ich jako części strony.
+generate.py
+template.html
+style.css
+data.csv
+INSTRUKCJA.md
+netlify.toml
+.netlifyignore
+.github/
+dist/

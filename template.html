@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{TITLE}}</title>
+  <meta name="description" content="{{DESCRIPTION}}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="canonical" href="{{CANONICAL}}">
+  <script type="application/ld+json">
+  {{JSON_LD}}
+  </script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="/assets/map.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>Westerplatte 1939</h1>
+      <p>Agregator losów żołnierzy WST</p>
+    </div>
+    <div class="actions">
+      <span id="dataStatus" class="db-status">Baza danych: <b>{{FILL_PCT}}%</b> wypełnienia <span class="db-info" tabindex="0" role="button" aria-label="Szczegóły wypełnienia bazy">&#9432;<span class="db-tip">{{FILL_TIP}}</span></span></span>
+      <button class="info-btn" data-about title="O stronie i autorze">i</button>
+      <nav class="top-nav">
+        <a href="/">📋 Baza żołnierzy</a>
+        <a href="/mapy.html#map-bitwa">🗺 Mapa bitwy</a>
+        <a href="/mapy.html#map-ogolna">🌍 Mapa ogólna</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container {{PAGE_CLASS}}">
+    {{NOTE}}
+    {{BASICS}}
+    {{INTRO}}
+    {{SECTIONS}}
+    {{PLACES}}
+    {{MAP_BLOCK}}
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <h3>O projekcie</h3>
+        <p>WesterApp to otwarta baza losów żołnierzy Wojskowej Składnicy Tranzytowej,
+           która powstała, by ocalić od zapomnienia historie obrońców Westerplatte
+           z września 1939.</p>
+        <p>Projekt rozwijany w wolnej chwili i udostępniany za darmo. Oprowadzania
+           związane z historią Westerplatte prowadzi <strong>Jakub Raciborski</strong>
+           – przewodnik trójmiejski. Więcej o celu serwisu na stronie
+           <a href="/o-projekcie.html">O projekcie</a>.</p>
+      </div>
+      <div>
+        <h3>Wesprzyj moją twórczość</h3>
+        <p>Podoba Ci się to, co robię? Możesz wesprzeć dalszy rozwój moich projektów
+           darowizną przez Stripe. Każda wpłata motywuje mnie do tworzenia nowych
+           funkcji i utrzymania serwisów. Dziękuję!</p>
+        <a href="https://buy.stripe.com/5kA3f2e5A1vsaDmcMM" target="_blank" rel="noopener"
+           class="footer-support-btn">💛 Wsparcie przez Stripe</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      Jakub Raciborski &copy; 2026 &middot;
+      <a href="https://racibo.pl" target="_blank" rel="noopener">racibo.pl</a>
+    </div>
+  </footer>
+
+  <div id="aboutModal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <button id="aboutClose" class="modal-close" aria-label="Zamknij">&times;</button>
+      <div id="aboutBody">
+        <h2>O stronie i jej autorze</h2>
+        <p>Nazywam się <strong>Jakub Raciborski</strong> i zawodowo oprowadzam turystów
+           po Westerplatte i Trójmieście. Staram się przekazać słuchaczom przekrój
+           najważniejszych informacji o półwyspie – o jego obronie we wrześniu 1939 roku
+           oraz o losach ludzi i samego miejsca po wojnie.</p>
+        <p>Z literatury dotyczącej Westerplatte staram się wyciągać te informacje,
+           które są najciekawsze i najbardziej wartościowe dla zrozumienia obrońców
+           oraz miejsc, w których toczyła się walka. W ten sposób powstała baza danych,
+           która tworzy tę stronę.</p>
+        <p>Strona ma charakter <strong>amatorski</strong> i nie zawiera przypisów
+           naukowych – jest przede wszystkim narzędziem w mojej pracy przewodnika.
+           Podczas wycieczki łączę te pozornie suche dane w opowieść o bitwie,
+           która rozegrała się na tym skrawku ziemi.</p>
+        <p class="about-cta">Jeśli chcesz poznać Westerplatte nie tylko z map i tabel,
+           <a href="https://racibo.pl/" target="_blank" rel="noopener">zapraszam na oprowadzanie →</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="/assets/about.js"></script>
+</body>
+</html>
